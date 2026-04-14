@@ -5,6 +5,9 @@ public class Main {
 
     public static void main(String[] args) {
 
+        // Load keywords before tokenizing
+        KeywordManager.loadKeywords("keywords.txt");
+
         Tokenizer tokenizer = new Tokenizer();
         Scanner scanner = new Scanner(System.in);
 

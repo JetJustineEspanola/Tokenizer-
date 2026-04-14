@@ -123,15 +123,10 @@ public class Tokenizer {
 
     // ─────────────────────────────────────────────────────────────────
     // KEYWORD CHECK
-    // Person 2: replace the body of this method with:
-    //     return KeywordManager.isKeyword(word);
+    // Uses KeywordManager for keyword lookup
     // ─────────────────────────────────────────────────────────────────
     private boolean isKeyword(String word) {
-        String[] keywords = { "int", "float", "if", "else", "return", "while", "for", "do", "void", "boolean" };
-        for (String k : keywords) {
-            if (k.equals(word)) return true;
-        }
-        return false;
+        return KeywordManager.isKeyword(word);
     }
 
     // ─────────────────────────────────────────────────────────────────
