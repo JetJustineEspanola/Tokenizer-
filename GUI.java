@@ -4,7 +4,6 @@ import javax.swing.table.*;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.*;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -51,10 +50,8 @@ public class GUI extends JFrame {
     private JLabel            statusLabel;
     private JLabel            totalLabel;
     private JPanel            sidebarStats;
-    private JLabel            fileNameLabel;
 
     private final Tokenizer tokenizer = new Tokenizer();
-    private File currentFile = null;
 
     // ─────────────────────────────────────────────────────────────────
     public GUI() {
@@ -92,77 +89,12 @@ public class GUI extends JFrame {
         bar.setOpaque(false);
         bar.setBorder(BorderFactory.createCompoundBorder(
             new MatteBorder(0, 0, 1, 0, C_BORDER),
-            new EmptyBorder(0, 0, 0, 0)
+            new EmptyBorder(0, 28, 0, 24)
         ));
         bar.setPreferredSize(new Dimension(0, 58));
 
-        // Menu bar
-        JMenuBar menuBar = new JMenuBar();
-        menuBar.setBackground(C_SURFACE);
-        menuBar.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
-        
-        // File menu
-        JMenu fileMenu = new JMenu("File");
-        fileMenu.setFont(F_UI);
-        fileMenu.setForeground(C_TEXT);
-        fileMenu.setOpaque(false);
-        
-        JMenuItem newFile = new JMenuItem("New");
-        newFile.setFont(F_UI);
-        newFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK));
-        newFile.addActionListener(e -> newFile());
-        
-        JMenuItem openFile = new JMenuItem("Open...");
-        openFile.setFont(F_UI);
-        openFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK));
-        openFile.addActionListener(e -> openFile());
-        
-        JMenuItem saveFile = new JMenuItem("Save");
-        saveFile.setFont(F_UI);
-        saveFile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
-        saveFile.addActionListener(e -> saveFile());
-        
-        JMenuItem saveAsFile = new JMenuItem("Save As...");
-        saveAsFile.setFont(F_UI);
-        saveAsFile.addActionListener(e -> saveFileAs());
-        
-        fileMenu.add(newFile);
-        fileMenu.add(openFile);
-        fileMenu.add(saveFile);
-        fileMenu.add(saveAsFile);
-        fileMenu.addSeparator();
-        
-        JMenuItem exitItem = new JMenuItem("Exit");
-        exitItem.setFont(F_UI);
-        exitItem.addActionListener(e -> System.exit(0));
-        fileMenu.add(exitItem);
-        
-        // Keywords menu
-        JMenu kwMenu = new JMenu("Keywords");
-        kwMenu.setFont(F_UI);
-        kwMenu.setForeground(C_TEXT);
-        kwMenu.setOpaque(false);
-        
-        JMenuItem viewKeywords = new JMenuItem("Manage Keywords...");
-        viewKeywords.setFont(F_UI);
-        viewKeywords.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_K, InputEvent.CTRL_DOWN_MASK));
-        viewKeywords.addActionListener(e -> showKeywordManager());
-        
-        JMenuItem reloadKeywords = new JMenuItem("Reload Keywords");
-        reloadKeywords.setFont(F_UI);
-        reloadKeywords.addActionListener(e -> {
-            KeywordManager.loadKeywords("keywords.txt");
-            setStatus("Keywords reloaded from keywords.txt", C_CYAN);
-        });
-        
-        kwMenu.add(viewKeywords);
-        kwMenu.add(reloadKeywords);
-        
-        menuBar.add(fileMenu);
-        menuBar.add(kwMenu);
-        
         // Left: icon + title
-        JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         left.setOpaque(false);
 
         JLabel icon = new JLabel("\u25C8");
@@ -199,9 +131,8 @@ public class GUI extends JFrame {
         };
         for (Object[] t : types) chips.add(makeChip((String) t[0], (Color) t[1]));
 
-        bar.add(left,  BorderLayout.CENTER);
+        bar.add(left,  BorderLayout.WEST);
         bar.add(chips, BorderLayout.EAST);
-        bar.add(menuBar, BorderLayout.WEST);
         return bar;
     }
 
@@ -364,7 +295,7 @@ public class GUI extends JFrame {
         tabBar.setBorder(new MatteBorder(0, 0, 1, 0, C_BORDER));
         tabBar.setPreferredSize(new Dimension(0, 36));
 
-        fileNameLabel = new JLabel("  source.code") {
+        JLabel tab = new JLabel("  source.code") {
             @Override protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setColor(C_CYAN);
@@ -373,16 +304,16 @@ public class GUI extends JFrame {
                 super.paintComponent(g);
             }
         };
-        fileNameLabel.setFont(F_MONO_SM);
-        fileNameLabel.setForeground(C_TEXT);
-        fileNameLabel.setBorder(new EmptyBorder(0, 18, 0, 18));
+        tab.setFont(F_MONO_SM);
+        tab.setForeground(C_TEXT);
+        tab.setBorder(new EmptyBorder(0, 18, 0, 18));
 
         JLabel editorHint = new JLabel("Ctrl+Enter to run   ");
         editorHint.setFont(F_TINY);
         editorHint.setForeground(C_DIM);
 
-        tabBar.add(fileNameLabel, BorderLayout.WEST);
-        tabBar.add(editorHint,  BorderLayout.EAST);
+        tabBar.add(tab,       BorderLayout.WEST);
+        tabBar.add(editorHint, BorderLayout.EAST);
 
         // Line numbers
         JTextArea lineNums = new JTextArea("1") {
@@ -576,245 +507,6 @@ public class GUI extends JFrame {
     private void setStatus(String msg, Color c) {
         statusLabel.setText(msg);
         statusLabel.setForeground(c);
-    }
-
-    // ─────────────────────────────────────────────────────────────────
-    // FILE MANAGEMENT
-    // ─────────────────────────────────────────────────────────────────
-    private void newFile() {
-        int confirm = JOptionPane.showConfirmDialog(this, 
-            "Discard current changes and create a new file?", 
-            "New File", 
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.QUESTION_MESSAGE);
-        if (confirm == JOptionPane.YES_OPTION) {
-            codeInput.setText("");
-            codeInput.setForeground(new Color(180, 210, 240));
-            currentFile = null;
-            fileNameLabel.setText("  untitled.code");
-            tableModel.setRowCount(0);
-            refreshStats(null);
-            totalLabel.setText("");
-            setStatus("New file created", C_MUTED);
-        }
-    }
-
-    private void openFile() {
-        JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Open Source File");
-        chooser.setBackground(C_SURFACE);
-        chooser.setForeground(C_TEXT);
-        
-        int result = chooser.showOpenDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            File selected = chooser.getSelectedFile();
-            try {
-                StringBuilder content = new StringBuilder();
-                try (BufferedReader reader = new BufferedReader(new FileReader(selected))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        content.append(line).append("\n");
-                    }
-                }
-                codeInput.setText(content.toString());
-                codeInput.setForeground(new Color(180, 210, 240));
-                currentFile = selected;
-                fileNameLabel.setText("  " + selected.getName());
-                tableModel.setRowCount(0);
-                refreshStats(null);
-                totalLabel.setText("");
-                setStatus("Opened: " + selected.getName(), C_CYAN);
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(this, 
-                    "Error opening file: " + e.getMessage(), 
-                    "Error", 
-                    JOptionPane.ERROR_MESSAGE);
-                setStatus("Failed to open file", C_UNK);
-            }
-        }
-    }
-
-    private void saveFile() {
-        if (currentFile == null) {
-            saveFileAs();
-            return;
-        }
-        saveToFile(currentFile);
-    }
-
-    private void saveFileAs() {
-        JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Save Source File");
-        chooser.setBackground(C_SURFACE);
-        chooser.setForeground(C_TEXT);
-        
-        if (currentFile != null) {
-            chooser.setSelectedFile(currentFile);
-        }
-        
-        int result = chooser.showSaveDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            File selected = chooser.getSelectedFile();
-            saveToFile(selected);
-        }
-    }
-
-    private void saveToFile(File file) {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
-            writer.print(codeInput.getText());
-            currentFile = file;
-            fileNameLabel.setText("  " + file.getName());
-            setStatus("Saved: " + file.getName(), C_INT);
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, 
-                "Error saving file: " + e.getMessage(), 
-                "Error", 
-                JOptionPane.ERROR_MESSAGE);
-            setStatus("Failed to save file", C_UNK);
-        }
-    }
-
-    // ─────────────────────────────────────────────────────────────────
-    // KEYWORD MANAGER DIALOG
-    // ─────────────────────────────────────────────────────────────────
-    private void showKeywordManager() {
-        JDialog dialog = new JDialog(this, "Keyword Manager", true);
-        dialog.setSize(500, 450);
-        dialog.setLocationRelativeTo(this);
-        dialog.setBackground(C_BASE);
-        dialog.setResizable(false);
-
-        JPanel content = new JPanel(new BorderLayout());
-        content.setBackground(C_BASE);
-        content.setBorder(new EmptyBorder(16, 16, 16, 16));
-
-        // Header
-        JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(C_BASE);
-        JLabel title = new JLabel("Manage Keywords (" + KeywordManager.getKeywordCount() + ")");
-        title.setFont(F_UI_B);
-        title.setForeground(C_TEXT);
-        header.add(title, BorderLayout.WEST);
-
-        // Keyword list model
-        DefaultListModel<String> listModel = new DefaultListModel<>();
-        updateKeywordList(listModel);
-
-        JButton reloadBtn = new JButton("Reload");
-        reloadBtn.setFont(F_TINY);
-        reloadBtn.setBackground(C_RAISED);
-        reloadBtn.setForeground(C_TEXT);
-        reloadBtn.setBorder(BorderFactory.createLineBorder(C_BORDER));
-        reloadBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        reloadBtn.addActionListener(e -> {
-            KeywordManager.loadKeywords("keywords.txt");
-            updateKeywordList(listModel);
-            title.setText("Manage Keywords (" + KeywordManager.getKeywordCount() + ")");
-            setStatus("Keywords reloaded", C_CYAN);
-        });
-        header.add(reloadBtn, BorderLayout.EAST);
-
-        // Keyword list
-        JList<String> keywordList = new JList<>(listModel);
-        keywordList.setFont(F_MONO_SM);
-        keywordList.setBackground(C_SURFACE);
-        keywordList.setForeground(C_TEXT);
-        keywordList.setSelectionBackground(new Color(34, 211, 238, 30));
-        keywordList.setSelectionForeground(C_TEXT);
-        keywordList.setFixedCellHeight(28);
-        keywordList.setBorder(BorderFactory.createLineBorder(C_BORDER));
-        
-        JScrollPane scroll = new JScrollPane(keywordList);
-        scroll.setBorder(null);
-        scroll.setBackground(C_SURFACE);
-
-        // Input panel
-        JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        inputPanel.setBackground(C_BASE);
-        inputPanel.setBorder(new EmptyBorder(10, 0, 0, 0));
-        
-        JTextField newKeywordField = new JTextField(15);
-        newKeywordField.setFont(F_MONO_SM);
-        newKeywordField.setBackground(C_SURFACE);
-        newKeywordField.setForeground(C_TEXT);
-        newKeywordField.setBorder(BorderFactory.createLineBorder(C_BORDER));
-        
-        JButton addBtn = new JButton("Add");
-        addBtn.setFont(F_TINY);
-        addBtn.setBackground(C_CYAN);
-        addBtn.setForeground(C_BASE);
-        addBtn.setBorder(BorderFactory.createLineBorder(C_CYAN));
-        addBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        addBtn.addActionListener(e -> {
-            String kw = newKeywordField.getText().trim();
-            if (kw.isEmpty()) {
-                JOptionPane.showMessageDialog(dialog, "Please enter a keyword", "Input Required", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            if (KeywordManager.addKeyword(kw)) {
-                listModel.addElement(kw);
-                title.setText("Manage Keywords (" + KeywordManager.getKeywordCount() + ")");
-                newKeywordField.setText("");
-                setStatus("Added keyword: " + kw, C_INT);
-            } else {
-                JOptionPane.showMessageDialog(dialog, "Keyword already exists", "Duplicate", JOptionPane.INFORMATION_MESSAGE);
-            }
-        });
-        
-        JButton removeBtn = new JButton("Remove");
-        removeBtn.setFont(F_TINY);
-        removeBtn.setBackground(C_KW);
-        removeBtn.setForeground(C_TEXT);
-        removeBtn.setBorder(BorderFactory.createLineBorder(C_KW));
-        removeBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        removeBtn.addActionListener(e -> {
-            String selected = keywordList.getSelectedValue();
-            if (selected == null) {
-                JOptionPane.showMessageDialog(dialog, "Please select a keyword to remove", "Selection Required", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            if (KeywordManager.removeKeyword(selected)) {
-                listModel.removeElement(selected);
-                title.setText("Manage Keywords (" + KeywordManager.getKeywordCount() + ")");
-                setStatus("Removed keyword: " + selected, C_KW);
-            }
-        });
-        
-        JButton saveBtn = new JButton("Save to File");
-        saveBtn.setFont(F_TINY);
-        saveBtn.setBackground(C_INT);
-        saveBtn.setForeground(C_BASE);
-        saveBtn.setBorder(BorderFactory.createLineBorder(C_INT));
-        saveBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        saveBtn.addActionListener(e -> {
-            if (KeywordManager.saveKeywords("keywords.txt")) {
-                JOptionPane.showMessageDialog(dialog, "Keywords saved to keywords.txt", "Success", JOptionPane.INFORMATION_MESSAGE);
-                setStatus("Keywords saved to keywords.txt", C_INT);
-            } else {
-                JOptionPane.showMessageDialog(dialog, "Failed to save keywords", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-        });
-
-        inputPanel.add(new JLabel("Add: "));
-        inputPanel.add(newKeywordField);
-        inputPanel.add(addBtn);
-        inputPanel.add(removeBtn);
-        inputPanel.add(saveBtn);
-
-        content.add(header, BorderLayout.NORTH);
-        content.add(scroll, BorderLayout.CENTER);
-        content.add(inputPanel, BorderLayout.SOUTH);
-
-        dialog.setContentPane(content);
-        dialog.setVisible(true);
-    }
-
-    private void updateKeywordList(DefaultListModel<String> model) {
-        model.clear();
-        String[] keywords = KeywordManager.getKeywords();
-        for (String kw : keywords) {
-            model.addElement(kw);
-        }
     }
 
     // ─────────────────────────────────────────────────────────────────
