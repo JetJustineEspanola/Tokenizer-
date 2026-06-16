@@ -44,7 +44,7 @@ public class KeywordManager {
             System.err.println("[KeywordManager] Warning: could not load '" + filename + "'. " + e.getMessage());
             System.err.println("[KeywordManager] Falling back to built-in keywords.");
             // Fallback — mirrors Tokenizer's original built-in list
-            String[] fallback = { "int", "float", "if", "else", "return", "while", "for", "do", "void", "boolean" };
+            String[] fallback = { "i    nt", "float", "if", "else", "return", "while", "for", "do", "void", "boolean" };
             keywords = fallback;
             count    = fallback.length;
             return;
@@ -75,80 +75,6 @@ public class KeywordManager {
         System.out.println("[KeywordManager] Keywords (" + count + "):");
         for (int i = 0; i < count; i++) {
             System.out.println("  " + (i + 1) + ". " + keywords[i]);
-        }
-    }
-
-    /**
-     * Returns the number of loaded keywords.
-     * @return keyword count
-     */
-    public static int getKeywordCount() {
-        return count;
-    }
-
-    /**
-     * Returns all loaded keywords as an array.
-     * @return array of keyword strings
-     */
-    public static String[] getKeywords() {
-        String[] result = new String[count];
-        System.arraycopy(keywords, 0, result, 0, count);
-        return result;
-    }
-
-    /**
-     * Adds a new keyword if it doesn't already exist.
-     * @param keyword the keyword to add
-     * @return true if added, false if already present
-     */
-    public static boolean addKeyword(String keyword) {
-        if (keyword == null || keyword.trim().isEmpty()) return false;
-        keyword = keyword.trim();
-        if (isKeyword(keyword)) return false;
-        
-        String[] newKeywords = new String[count + 1];
-        System.arraycopy(keywords, 0, newKeywords, 0, count);
-        newKeywords[count] = keyword;
-        keywords = newKeywords;
-        count++;
-        return true;
-    }
-
-    /**
-     * Removes a keyword if it exists.
-     * @param keyword the keyword to remove
-     * @return true if removed, false if not found
-     */
-    public static boolean removeKeyword(String keyword) {
-        if (keyword == null) return false;
-        
-        for (int i = 0; i < count; i++) {
-            if (keywords[i].equals(keyword)) {
-                String[] newKeywords = new String[count - 1];
-                System.arraycopy(keywords, 0, newKeywords, 0, i);
-                System.arraycopy(keywords, i + 1, newKeywords, i, count - i - 1);
-                keywords = newKeywords;
-                count--;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Saves current keywords to a file.
-     * @param filename path to save keywords
-     * @return true if successful, false otherwise
-     */
-    public static boolean saveKeywords(String filename) {
-        try (java.io.PrintWriter writer = new java.io.PrintWriter(new java.io.FileWriter(filename))) {
-            for (int i = 0; i < count; i++) {
-                writer.println(keywords[i]);
-            }
-            return true;
-        } catch (IOException e) {
-            System.err.println("[KeywordManager] Error saving keywords: " + e.getMessage());
-            return false;
         }
     }
 }
